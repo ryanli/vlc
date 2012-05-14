@@ -18,9 +18,7 @@ extern "C" {
 #endif
 
 	/* Decode Function */
-	int FillSdram(BufInfo * pBufInfo, uint32_t targetAddr, phyaddr_t bsBufStartAddr, phyaddr_t bsBufEndAddr, uint32_t size, int endian, int checkeos, int *streameos);
 	int FillSdramBurst(BufInfo * pBufInfo, uint32_t targetAddr, phyaddr_t bsBufStartAddr, phyaddr_t bsBufEndAddr, uint32_t size, int endian, int checkeos, int *streameos);
-	int FillSdramBurstFromFile(FILE *fp, int targetAddr, int bsBufStartAddr, int bsBufEndAddr, int size, int endian, int checkeos, int *streameos);
 
 	void StoreYuvImageBurst(unsigned char * dst, 
 			int picWidth, 
@@ -41,74 +39,6 @@ extern "C" {
 			int interLeave, 
 			int format
 			);
-	void StoreYuvImage(unsigned char * dst, 
-			int picWidth, 
-			int picHeight,
-			int addrY, 
-			int addrCb, 
-			int addrCr, 
-			int stride, 
-			int interLeave
-			);
-
-	/* Encode Function */
-	void ProcessEncodedBitstreamBurst( 
-			FILE * fp, 
-			int targetAddr, 
-			phyaddr_t bsBufStartAddr, 
-			phyaddr_t bsBufEndAddr,
-			int size, int endian
-			);
-	void ProcessEncodedBitstream(FILE * fp, 
-			int targetAddr, 
-			int size, 
-			int endian
-			);
-
-	void LoadYuvImageBurst(unsigned char * src, 
-			int picWidth, 
-			int picHeight,
-			int addrY, 
-			int addrCb, 
-			int addrCr, 
-			int stride, 
-			int interLeave 
-			);
-	void LoadYuvImageBurstFormat(unsigned char * src, 
-			int picWidth, 
-			int picHeight,
-			int addrY, 
-			int addrCb, 
-			int addrCr, 
-			int stride, 
-			int interLeave,
-			int format
-			);
-#ifdef JPEG_PARTIAL
-	void LoadYuvImageBurstFormatPartial( unsigned char * src, 
-		int picWidth,
-		int picHeight,
-		int picHeightPartial,
-		int addrY, 
-		int addrCb, 
-		int addrCr, 
-		int offsetLuma,
-		int offsetChroma,
-		int stride, 
-		int interLeave,
-		int format
-		);
-#endif // JPEG_PARTIAL
-	void LoadYuvImage(unsigned char * src, 
-			int picWidth, 
-			int picHeight,
-			int addrY, 
-			int addrCb, 
-			int addrCr, 
-			int stride, 
-			int interLeave 
-			);
-
 	void ReadSdramBurst(unsigned char buf[], int addr, int byteSize, int bigEndian);
 	void WriteSdramBurst(unsigned char buf[], int addr, int byteSize, int bIsBigEndian);
 
