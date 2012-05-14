@@ -1,0 +1,2 @@
+SOURCES_coda7542 = coda7542.c Falcon.h IOFunc.c IOFunc.h RegDefine.h VpuApi.c VpuApi.h \
+	VpuApiFunc.c VpuApiFunc.h VpuIoctl.h VpuJpegTable.h VpuMain.h

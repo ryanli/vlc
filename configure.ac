@@ -2237,6 +2237,17 @@ then
 fi
 
 dnl
+dnl coda7542 codec plugin
+dnl
+
+AC_ARG_ENABLE(coda7542,
+  [  --enable-coda7542       Coda7542 codec module (default disabled)])
+if test "${enable_coda7542}" = "yes"
+then
+  VLC_ADD_PLUGIN([coda7542])
+fi
+
+dnl
 dnl CrystalHD codec plugin
 dnl
 AC_ARG_ENABLE(crystalhd,
@@ -4201,6 +4212,7 @@ AC_CONFIG_FILES([
   modules/audio_output/Makefile
   modules/codec/Makefile
   modules/codec/avcodec/Makefile
+  modules/codec/coda7542/Makefile
   modules/codec/dmo/Makefile
   modules/codec/loader/Makefile
   modules/codec/omxil/Makefile
