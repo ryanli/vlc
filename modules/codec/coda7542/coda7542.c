@@ -170,72 +170,45 @@ static void CloseDecoder(vlc_object_t *p_this)
 
 RetCode WriteBsBufHelper(DecHandle handle, BufInfo *pBufInfo,
 		phyaddr_t paBsBufStart, phyaddr_t paBsBufEnd,
-		int defaultsize, int checkeos, int *pstreameos)
+		int checkeos, int *pstreameos)
 {
-	RetCode ret = RETCODE_SUCCESS;
+	RetCode ret;
+
+	phyaddr_t paRdPtr, paWrPtr;
 	uint32_t size = 0;
 	int fillSize = 0;
-	phyaddr_t paRdPtr, paWrPtr;
 
 	ret = VPU_DecGetBitstreamBuffer(handle, &paRdPtr, &paWrPtr, &size);
-	if( ret != RETCODE_SUCCESS )
-	{
+	if (ret != RETCODE_SUCCESS) {
 		fprintf(stderr, "VPU_DecGetBitstreamBuffer failed Error code is 0x%x \n", ret );
-		goto FILL_BS_ERROR;
+		return ret;
 	}
 
-	if( size <= 0 )
-		return RETCODE_SUCCESS;
-
-	if( defaultsize > 0 )
-	{
-		if( size < defaultsize )
-			return RETCODE_SUCCESS;
-
-		fillSize = defaultsize;
-	}
-	else
-	{
-		fillSize = ( ( size >> 9 ) << 9 );
-	}
-
-	if( fillSize == 0 )
-		return RETCODE_SUCCESS;
-
-#ifdef	PRE_SCAN
-	fillSize = 128*8;
-#endif
+	// round to a multiple of 1024
+	fillSize = size & ~0x3ff;
 
 	fillSize = FillSdramBurst(pBufInfo, paWrPtr, paBsBufStart, paBsBufEnd,
 			fillSize, STREAM_ENDIAN, checkeos, pstreameos);
 
-	if( *pstreameos == 0 )
-	{
+	if (*pstreameos == 0) {
 		ret = VPU_DecUpdateBitstreamBuffer( handle, fillSize );
-		if( ret != RETCODE_SUCCESS )
-		{
+		if (ret != RETCODE_SUCCESS) {
 			fprintf(stderr, "VPU_DecUpdateBitstreamBuffer failed Error code is 0x%x \n", ret );
-			goto FILL_BS_ERROR;
+			return ret;
 		}
 	}
-	else
-	{
-		if( !pBufInfo->fillendbs )
-		{
-			ret = VPU_DecUpdateBitstreamBuffer(handle, STREAM_END_SIZE) ;
-			if( ret != RETCODE_SUCCESS )
-			{
+	else {
+		if (!pBufInfo->fillendbs) {
+			ret = VPU_DecUpdateBitstreamBuffer(handle, STREAM_END_SIZE);
+			if (ret != RETCODE_SUCCESS) {
 				fprintf(stderr, "VPU_DecUpdateBitstreamBuffer failed Error code is 0x%x \n", ret );
-				goto FILL_BS_ERROR;
+				return ret;
 			}
-
 			pBufInfo->fillendbs = 1;
 		}
 	}
 
-FILL_BS_ERROR:
-
-	return ret;
+	return RETCODE_SUCCESS;
 }
 
 /****************************************************************************
@@ -247,9 +220,6 @@ static picture_t *DecodeBlock(decoder_t *p_dec, block_t **pp_block)
 	decoder_sys_t *p_sys = p_dec->p_sys;
 	block_t *p_block = *pp_block;
 	picture_t *p_pic;
-
-	phyaddr_t pa_buf_start, pa_buf_end;
-	uint32_t buf_size;
 
 	BufInfo buf_info = {0};
 
@@ -266,7 +236,7 @@ static picture_t *DecodeBlock(decoder_t *p_dec, block_t **pp_block)
 	buf_info.point = 0;
 
 	WriteBsBufHelper(p_sys->handle, &buf_info, vpu_mem_base+ADDR_BIT_STREAM,
-		vpu_mem_base+ADDR_BIT_STREAM+SMALL_STREAM_BUF_SIZE, 0, 1, &check_eos);
+		vpu_mem_base+ADDR_BIT_STREAM+SMALL_STREAM_BUF_SIZE, 1, &check_eos);
 
 	if (!p_sys->inited) {
 		// get initial info of video
@@ -281,6 +251,8 @@ static picture_t *DecodeBlock(decoder_t *p_dec, block_t **pp_block)
 		p_sys->p_fb = malloc(p_sys->init_info.minFrameBufferCount * sizeof(*p_sys->p_fb));
 		VPU_DecRegisterFrameBuffer(p_sys->handle, p_sys->p_fb,
 			p_sys->init_info.minFrameBufferCount, p_sys->init_info.picWidth, &dec_buf_info);
+
+		p_sys->inited = true;
 	}
 
 	VPU_DecStartOneFrame(p_sys->handle, &dec_param);
